@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #112233;
+  background:
+    radial-gradient(circle at top left, rgba(0, 122, 108, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbfa 0%, #edf3f2 100%);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
