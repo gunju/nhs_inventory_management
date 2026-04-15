@@ -1,83 +1,42 @@
-from datetime import datetime
+from __future__ import annotations
+
+import uuid
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class Citation(BaseModel):
-    doc_id: str
-    chunk_id: str
-    quote: str
-    url_or_path: str
+class ChatRequest(BaseModel):
+    session_id: uuid.UUID | None = None  # None = start new session
+    message: str = Field(..., min_length=1, max_length=4000)
+    trust_id: uuid.UUID | None = None
 
 
-class ExplainabilityNote(BaseModel):
+class EvidenceRef(BaseModel):
+    type: str  # stock_balance / forecast / lead_time / policy / anomaly / document
+    id: str
     label: str
-    detail: str
-    source: str
+    value: str | None = None
 
 
-class Rationale(BaseModel):
-    summary: str
-    citations: list[Citation] = Field(default_factory=list)
-    confidence: float
-    insufficient_evidence: bool
-    explainability_notes: list[ExplainabilityNote] = Field(default_factory=list)
+class CopilotResponse(BaseModel):
+    session_id: uuid.UUID
+    answer: str
+    confidence: float | None = None
+    reason_codes: list[str] = []
+    evidence: list[EvidenceRef] = []
+    recommended_actions: list[str] = []
+    follow_up_questions: list[str] = []
+    grounded: bool = True
+
+    model_config = {"from_attributes": True}
 
 
-class InventoryItemRecommendation(BaseModel):
-    sku_id: str
-    item_name: str
-    qty: int
-    unit: str
-    substitutions: list[str] = Field(default_factory=list)
-    rationale: str
-    decision_factors: list[str] = Field(default_factory=list)
+class ConversationOut(BaseModel):
+    id: uuid.UUID
+    title: str | None = None
+    is_active: bool
+    created_at: str
+    messages: list[dict[str, Any]] = []
 
-
-class RecommendationExplainability(BaseModel):
-    patient_signals: list[str] = Field(default_factory=list)
-    rules_applied: list[str] = Field(default_factory=list)
-    governance_notes: list[str] = Field(default_factory=list)
-
-
-class RecommendedBundle(BaseModel):
-    bundle_name: str
-    items: list[InventoryItemRecommendation]
-    rationale: Rationale
-    explainability: RecommendationExplainability
-
-
-class WarningMessage(BaseModel):
-    type: str
-    detail: str
-
-
-class AuditMetadata(BaseModel):
-    model_version: str
-    retriever_version: str
-    timestamp: datetime
-
-
-class PatientRequirement(BaseModel):
-    pathway_id: str
-    likely_monitoring_needs: list[str]
-    urgency_level: str
-    specialist_review_likelihood: str
-    recommended_care_context: str
-
-
-class InventoryRecommendationRequest(BaseModel):
-    patient_pseudo_id: str
-    case_summary: str
-    site_id: str = "site_01"
-    user_role: str = "clinical_ops_coordinator"
-
-
-class InventoryRecommendationResponse(BaseModel):
-    request_id: str
-    patient_pseudo_id: str
-    pathway_id: str
-    patient_requirements: PatientRequirement
-    recommended_bundles: list[RecommendedBundle]
-    warnings: list[WarningMessage]
-    audit: AuditMetadata
+    model_config = {"from_attributes": True}

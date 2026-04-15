@@ -1,31 +1,42 @@
-from datetime import date
+from __future__ import annotations
 
-from pydantic import BaseModel
+import uuid
+from typing import Literal
 
-
-class ForecastPoint(BaseModel):
-    sku_id: str
-    date: date
-    q10: int
-    q50: int
-    q90: int
+from pydantic import BaseModel, Field
 
 
-class ForecastModelMetadata(BaseModel):
-    type: str
-    features_used: list[str]
-    last_train_date: str
+class ForecastRunRequest(BaseModel):
+    horizon_days: int = Field(default=30, ge=1, le=90)
+    model_type: Literal["auto", "moving_average", "exp_smoothing", "lightgbm"] = "auto"
+    location_ids: list[uuid.UUID] | None = None
+    product_ids: list[uuid.UUID] | None = None
 
 
-class ForecastEvaluation(BaseModel):
-    backtest_wape: float
-    coverage_q90: float
-
-
-class ForecastResponse(BaseModel):
-    forecast_run_id: str
-    site_id: str
+class ForecastRunOut(BaseModel):
+    id: uuid.UUID
+    trust_id: uuid.UUID
+    run_type: str
+    model_type: str
     horizon_days: int
-    series: list[ForecastPoint]
-    model: ForecastModelMetadata
-    evaluation_snapshot: ForecastEvaluation
+    status: str
+    products_processed: int
+    error_message: str | None = None
+    metrics_json: str | None = None
+    created_at: str
+
+    model_config = {"from_attributes": True}
+
+
+class DemandForecastOut(BaseModel):
+    id: uuid.UUID
+    location_id: uuid.UUID
+    product_id: uuid.UUID
+    forecast_date: str
+    q10: float
+    q50: float
+    q90: float
+    model_used: str
+    confidence: float
+
+    model_config = {"from_attributes": True}
